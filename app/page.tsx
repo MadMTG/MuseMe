@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,10 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
+import { Grid2 } from "@mui/material";
+import Form from "./form";
+import Image from "next/image";
 
 interface SongResponse {
   id: string;
@@ -31,183 +34,140 @@ interface SongResponse {
   tags: string;
 }
 
-const generatePrompt = (userData: any): string => {
-  const genres = [
-    "pop",
-    "rock",
-    "country",
-    "hip-hop",
-    "jazz",
-    "classical",
-    "electronic",
-  ];
-  const randomGenre = genres[Math.floor(Math.random() * genres.length)];
-
-  return `A ${randomGenre} song about ${userData.name}, who is ${userData.age} years old and loves ${userData.hobby}. 
-  Their favorite color is ${userData.favoriteColor} and their dream job is ${userData.dreamJob}. 
-  The song should be upbeat and inspiring, celebrating their unique personality and aspirations.`;
-};
-
-const generateSong = async (prompt: string): Promise<SongResponse[]> => {
-  const response = await fetch("https://suno-api-sigma-five.vercel.app/api/generate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      prompt: prompt,
-      make_instrumental: false,
-      model: "chirp-v3-5",
-      wait_audio: true,
-    }),
-  });
+const fetchSongs = async () => {
+  const response = await fetch(
+    "https://suno-api-sigma-five.vercel.app/api/get"
+  );
   if (!response.ok) {
-    throw new Error("Failed to generate song");
+    throw new Error("Failed to fetch songs");
   }
 
-  console.log(response);
-  console.log(response.json()); 
   return response.json();
 };
 
 export default function KioskForm() {
-  const [formData, setFormData] = useState({
-    name: "",
-    age: "",
-    hobby: "",
-    favoriteColor: "",
-    dreamJob: "",
-  });
   const [songs, setSongs] = useState<SongResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [expandedSong, setExpandedSong] = useState<SongResponse | null>(null);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  const handleSongClick = (song: SongResponse) => {
+    setExpandedSong(expandedSong?.id === song.id ? null : song);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    try {
-      const prompt = generatePrompt(formData);
-      const generatedSongs = await generateSong(prompt);
-      setSongs(generatedSongs);
-    } catch (err) {
-      setError("Failed to generate song. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  const updateSongs = async () => {
+    fetchSongs().then((data) => {
+      setSongs(data);
+    });
   };
+
+  useEffect(() => {
+    updateSongs();
+    const intervalId = setInterval(() => {
+      updateSongs();
+    }, 5000); // 10000 milliseconds = 10 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12 bg-gray-50">
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Kiosk Song Generator</CardTitle>
-          <CardDescription>
-            Fill in your details to generate a personalized song!
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                name="age"
-                type="number"
-                value={formData.age}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="hobby">Favorite Hobby</Label>
-              <Input
-                id="hobby"
-                name="hobby"
-                value={formData.hobby}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="favoriteColor">Favorite Color</Label>
-              <Input
-                id="favoriteColor"
-                name="favoriteColor"
-                value={formData.favoriteColor}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dreamJob">Dream Job</Label>
-              <Textarea
-                id="dreamJob"
-                name="dreamJob"
-                value={formData.dreamJob}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating Song...
-                </>
-              ) : (
-                "Generate Song"
-              )}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col items-start">
-          {error && <p className="text-red-500 mb-2">{error}</p>}
-          {songs.length > 0 && (
-            <div className="mt-4 w-full">
-              <h3 className="font-semibold mb-2">Your Generated Songs:</h3>
-              {songs.map((song, index) => (
-                <div key={song.id} className="mb-4 p-4 border rounded">
-                  <h4 className="font-medium">
-                    Song {index + 1}: {song.title}
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Genre: {song.tags}
-                  </p>
-                  <audio controls src={song.audio_url} className="w-full mb-2">
-                    Your browser does not support the audio element.
-                  </audio>
-                  <details>
-                    <summary className="cursor-pointer text-sm text-blue-600">
-                      View Lyrics
-                    </summary>
-                    <p className="mt-2 text-sm whitespace-pre-wrap">
-                      {song.lyric}
+    <div className="flex flex-col items-center justify-center min-h-screen py-12 w-full max-w-3xl mx-auto">
+      <Form />
+      {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+      {songs.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-8 text-center">
+            Your Generated Songs
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
+            {songs.map((song) => (
+              <div key={song.id} className="w-full max-w-md">
+                <Card
+                  className="cursor-pointer transition-all duration-300 shadow-lg hover:shadow-xl"
+                  onClick={() => handleSongClick(song)}
+                >
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-center">
+                      {song.title}
+                    </h3>
+                    <p className="text-sm mb-4 text-center">
+                      Genre: {song.tags}
                     </p>
-                  </details>
+                    <div className="aspect-w-16 aspect-h-9 mb-4">
+                      <Image
+                        src={song.image_url}
+                        alt={song.title}
+                        width={1000}
+                        height={1000}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {expandedSong && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => setExpandedSong(null)}
+        >
+          <Card
+            className="w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <h2>{expandedSong.title}</h2>
+                <Button variant="ghost" onClick={() => setExpandedSong(null)}>
+                  <X className="h-6 w-6" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2">
+                <div className="aspect-w-16 aspect-h-9 mb-4">
+                  {expandedSong.video_url ? (
+                    <video
+                      src={expandedSong.video_url}
+                      controls
+                      poster={expandedSong.image_url}
+                      className="w-full h-full object-cover rounded"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <>
+                      <Image
+                        src={expandedSong.image_url}
+                        alt={expandedSong.title}
+                        width={1000}
+                        height={1000}
+                        className="w-full h-full object-cover rounded"
+                      />
+                      <audio
+                        controls
+                        src={expandedSong.audio_url}
+                        className="w-full mb-4"
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                    </>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </CardFooter>
-      </Card>
+                <p>Genre: {expandedSong.tags}</p>
+              </div>
+              <div className="w-full md:w-1/2">
+                <h3 className="text-xl font-semibold mb-2">Lyrics</h3>
+                <p className="whitespace-pre-wrap">{expandedSong.lyric}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
