@@ -11,9 +11,8 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface SongResponse {
   id: string;
@@ -33,19 +32,24 @@ interface SongResponse {
 
 const generatePrompt = (userData: any): string => {
   const genres = [
-    "pop",
-    "rock",
-    "country",
-    "hip-hop",
-    "jazz",
-    "classical",
-    "electronic",
+    "uplifting pop",
+    "heartfelt acoustic",
+    "light-hearted folk",
+    "cheerful country",
+    "feel-good rock",
+    "sentimental ballad",
   ];
   const randomGenre = genres[Math.floor(Math.random() * genres.length)];
 
-  return `A ${randomGenre} song about ${userData.name}, who is ${userData.age} years old and loves ${userData.hobby}. 
-  Their favorite color is ${userData.favoriteColor} and their dream job is ${userData.dreamJob}. 
-  The song should be upbeat and inspiring, celebrating their unique personality and aspirations.`;
+  return `Compose a ${randomGenre} song that incorporates the following:
+
+- A description of the requester: "${userData.userDescription}"
+- A description of the couple: "${userData.coupleDescription}"
+- A funny or unforgettable story about the bride or groom: "${userData.storyAboutCouple}"
+- A playful roast or special shout-out to someone at the wedding: "${userData.roastOrShoutout}"
+- The song is being requested by ${userData.name}, who is the ${userData.relationshipToCouple} of the couple.
+
+The song should be humorous and heartfelt, celebrating the occasion and the unique personalities involved. Make sure it's appropriate for all guests at the wedding.`;
 };
 
 const generateSong = async (prompt: string): Promise<SongResponse[]> => {
@@ -74,10 +78,11 @@ const generateSong = async (prompt: string): Promise<SongResponse[]> => {
 export default function KioskForm() {
   const [formData, setFormData] = useState({
     name: "",
-    age: "",
-    hobby: "",
-    favoriteColor: "",
-    dreamJob: "",
+    relationshipToCouple: "",
+    userDescription: "",
+    coupleDescription: "",
+    storyAboutCouple: "",
+    roastOrShoutout: "",
   });
   const [songs, setSongs] = useState<SongResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,6 +103,7 @@ export default function KioskForm() {
     try {
       const prompt = generatePrompt(formData);
       const generatedSongs = await generateSong(prompt);
+      // Handle the generated songs as needed
     } catch (err) {
       console.error(err);
       setError("Failed to generate song. Please try again.");
@@ -106,19 +112,19 @@ export default function KioskForm() {
     }
   };
 
-
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>Kiosk Song Generator</CardTitle>
+        <CardTitle>Wedding Song Generator</CardTitle>
         <CardDescription>
-          Fill in your details to generate a personalized song!
+          Share your stories to generate a personalized and humorous song for the
+          wedding!
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Your Name</Label>
             <Input
               id="name"
               name="name"
@@ -128,44 +134,67 @@ export default function KioskForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="age">Age</Label>
+            <Label htmlFor="relationshipToCouple">
+              Your Relationship to the Couple
+            </Label>
             <Input
-              id="age"
-              name="age"
-              type="number"
-              value={formData.age}
+              id="relationshipToCouple"
+              name="relationshipToCouple"
+              value={formData.relationshipToCouple}
               onChange={handleInputChange}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hobby">Favorite Hobby</Label>
-            <Input
-              id="hobby"
-              name="hobby"
-              value={formData.hobby}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="favoriteColor">Favorite Color</Label>
-            <Input
-              id="favoriteColor"
-              name="favoriteColor"
-              value={formData.favoriteColor}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="dreamJob">Dream Job</Label>
+            <Label htmlFor="userDescription">Describe Yourself</Label>
             <Textarea
-              id="dreamJob"
-              name="dreamJob"
-              value={formData.dreamJob}
+              id="userDescription"
+              name="userDescription"
+              value={formData.userDescription}
               onChange={handleInputChange}
               required
+              rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="coupleDescription">Describe the Couple</Label>
+            <Textarea
+              id="coupleDescription"
+              name="coupleDescription"
+              value={formData.coupleDescription}
+              onChange={handleInputChange}
+              required
+              rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="storyAboutCouple">
+              Share a funny or unforgettable story about the bride or groom that
+              perfectly captures who they are. Don't hold back—even the
+              embarrassing moments are welcome!
+            </Label>
+            <Textarea
+              id="storyAboutCouple"
+              name="storyAboutCouple"
+              value={formData.storyAboutCouple}
+              onChange={handleInputChange}
+              required
+              rows={4}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="roastOrShoutout">
+              Is there someone at the wedding you'd like to playfully roast or
+              give a special shout-out to? Share a humorous anecdote or
+              something that makes them stand out.
+            </Label>
+            <Textarea
+              id="roastOrShoutout"
+              name="roastOrShoutout"
+              value={formData.roastOrShoutout}
+              onChange={handleInputChange}
+              required
+              rows={4}
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
@@ -178,6 +207,7 @@ export default function KioskForm() {
               "Generate Song"
             )}
           </Button>
+          {error && <p className="text-red-500 mt-2">{error}</p>}
         </form>
       </CardContent>
     </Card>
