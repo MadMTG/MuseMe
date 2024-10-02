@@ -11,12 +11,8 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
-import { Loader2, X } from "lucide-react";
-import { Grid2 } from "@mui/material";
-import Form from "./form";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 
 interface SongResponse {
   id: string;
@@ -34,140 +30,186 @@ interface SongResponse {
   tags: string;
 }
 
-const fetchSongs = async () => {
+const generatePrompt = (userData: any): string => {
+  const genres = [
+    "uplifting pop",
+    "heartfelt acoustic",
+    "light-hearted folk",
+    "cheerful country",
+    "feel-good rock",
+    "sentimental ballad",
+  ];
+  const randomGenre = genres[Math.floor(Math.random() * genres.length)];
+
+  return `Compose a ${randomGenre} song that incorporates the following:
+
+- A description of the requester: "${userData.userDescription}"
+- A description of the couple: "${userData.coupleDescription}"
+- A funny or unforgettable story about the bride or groom: "${userData.storyAboutCouple}"
+- A playful roast or special shout-out to someone at the wedding: "${userData.roastOrShoutout}"
+- The song is being requested by ${userData.name}, who is the ${userData.relationshipToCouple} of the couple.
+
+The song should be humorous and heartfelt, celebrating the occasion and the unique personalities involved. Make sure it's appropriate for all guests at the wedding.`;
+};
+
+const generateSong = async (prompt: string): Promise<SongResponse[]> => {
   const response = await fetch(
-    "https://suno-api-sigma-five.vercel.app/api/get"
+    "https://suno-api-sigma-five.vercel.app/api/generate",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        make_instrumental: false,
+        model: "chirp-v3-5",
+        wait_audio: false,
+      }),
+    }
   );
   if (!response.ok) {
-    throw new Error("Failed to fetch songs");
+    throw new Error("Failed to generate song");
   }
 
   return response.json();
 };
 
 export default function KioskForm() {
+  const [formData, setFormData] = useState({
+    name: "",
+    relationshipToCouple: "",
+    userDescription: "",
+    coupleDescription: "",
+    storyAboutCouple: "",
+    roastOrShoutout: "",
+  });
   const [songs, setSongs] = useState<SongResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [expandedSong, setExpandedSong] = useState<SongResponse | null>(null);
 
-  const handleSongClick = (song: SongResponse) => {
-    setExpandedSong(expandedSong?.id === song.id ? null : song);
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const updateSongs = async () => {
-    fetchSongs().then((data) => {
-      setSongs(data);
-    });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      const prompt = generatePrompt(formData);
+      const generatedSongs = await generateSong(prompt);
+      // Handle the generated songs as needed
+    } catch (err) {
+      console.error(err);
+      setError("Failed to generate song. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  useEffect(() => {
-    updateSongs();
-    const intervalId = setInterval(() => {
-      updateSongs();
-    }, 5000); // 10000 milliseconds = 10 seconds
-
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
-  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12 w-full max-w-3xl mx-auto">
-      <Form />
-      {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-      {songs.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-8 text-center">
-            Your Generated Songs
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
-            {songs.map((song) => (
-              <div key={song.id} className="w-full max-w-md">
-                <Card
-                  className="cursor-pointer transition-all duration-300 shadow-lg hover:shadow-xl"
-                  onClick={() => handleSongClick(song)}
-                >
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-center">
-                      {song.title}
-                    </h3>
-                    <p className="text-sm mb-4 text-center">
-                      Genre: {song.tags}
-                    </p>
-                    <div className="aspect-w-16 aspect-h-9 mb-4">
-                      <Image
-                        src={song.image_url}
-                        alt={song.title}
-                        width={1000}
-                        height={1000}
-                        className="w-full h-full object-cover rounded"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ))}
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader>
+        <CardTitle>Wedding Song Generator</CardTitle>
+        <CardDescription>
+          Share your stories to generate a personalized and humorous song for the
+          wedding!
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="name">Your Name</Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
           </div>
-        </div>
-      )}
-
-      {expandedSong && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          onClick={() => setExpandedSong(null)}
-        >
-          <Card
-            className="w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <h2>{expandedSong.title}</h2>
-                <Button variant="ghost" onClick={() => setExpandedSong(null)}>
-                  <X className="h-6 w-6" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="flex flex-col md:flex-row gap-4">
-              <div className="w-full md:w-1/2">
-                <div className="aspect-w-16 aspect-h-9 mb-4">
-                  {expandedSong.video_url ? (
-                    <video
-                      src={expandedSong.video_url}
-                      controls
-                      poster={expandedSong.image_url}
-                      className="w-full h-full object-cover rounded"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                  ) : (
-                    <>
-                      <Image
-                        src={expandedSong.image_url}
-                        alt={expandedSong.title}
-                        width={1000}
-                        height={1000}
-                        className="w-full h-full object-cover rounded"
-                      />
-                      <audio
-                        controls
-                        src={expandedSong.audio_url}
-                        className="w-full mb-4"
-                      >
-                        Your browser does not support the audio element.
-                      </audio>
-                    </>
-                  )}
-                </div>
-                <p>Genre: {expandedSong.tags}</p>
-              </div>
-              <div className="w-full md:w-1/2">
-                <h3 className="text-xl font-semibold mb-2">Lyrics</h3>
-                <p className="whitespace-pre-wrap">{expandedSong.lyric}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
+          <div className="space-y-2">
+            <Label htmlFor="relationshipToCouple">
+              Your Relationship to the Couple
+            </Label>
+            <Input
+              id="relationshipToCouple"
+              name="relationshipToCouple"
+              value={formData.relationshipToCouple}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="userDescription">Describe Yourself</Label>
+            <Textarea
+              id="userDescription"
+              name="userDescription"
+              value={formData.userDescription}
+              onChange={handleInputChange}
+              required
+              rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="coupleDescription">Describe the Couple</Label>
+            <Textarea
+              id="coupleDescription"
+              name="coupleDescription"
+              value={formData.coupleDescription}
+              onChange={handleInputChange}
+              required
+              rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="storyAboutCouple">
+              Share a funny or unforgettable story about the bride or groom that
+              perfectly captures who they are. Don't hold back—even the
+              embarrassing moments are welcome!
+            </Label>
+            <Textarea
+              id="storyAboutCouple"
+              name="storyAboutCouple"
+              value={formData.storyAboutCouple}
+              onChange={handleInputChange}
+              required
+              rows={4}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="roastOrShoutout">
+              Is there someone at the wedding you'd like to playfully roast or
+              give a special shout-out to? Share a humorous anecdote or
+              something that makes them stand out.
+            </Label>
+            <Textarea
+              id="roastOrShoutout"
+              name="roastOrShoutout"
+              value={formData.roastOrShoutout}
+              onChange={handleInputChange}
+              required
+              rows={4}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating Song...
+              </>
+            ) : (
+              "Generate Song"
+            )}
+          </Button>
+          {error && <p className="text-red-500 mt-2">{error}</p>}
+        </form>
+      </CardContent>
+    </Card>
   );
 }
