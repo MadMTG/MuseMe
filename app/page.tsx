@@ -2,19 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardHeader,
-  CardTitle,
-  CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
-import { Loader2, X } from "lucide-react";
-import { Grid2 } from "@mui/material";
+import { X } from "lucide-react";
 import Form from "./form";
 import Image from "next/image";
 
@@ -47,8 +40,7 @@ const fetchSongs = async () => {
 
 export default function KioskForm() {
   const [songs, setSongs] = useState<SongResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error] = useState("");
   const [expandedSong, setExpandedSong] = useState<SongResponse | null>(null);
 
   const handleSongClick = (song: SongResponse) => {
@@ -65,9 +57,9 @@ export default function KioskForm() {
     updateSongs();
     const intervalId = setInterval(() => {
       updateSongs();
-    }, 5000); // 10000 milliseconds = 10 seconds
+    }, 5000);
 
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   return (

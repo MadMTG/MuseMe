@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +30,16 @@ interface SongResponse {
   tags: string;
 }
 
-const generatePrompt = (userData: any): string => {
+interface UserData {
+  name: string;
+  relationshipToCouple: string;
+  userDescription: string;
+  coupleDescription: string;
+  storyAboutCouple: string;
+  roastOrShoutout: string;
+}
+
+const generatePrompt = (userData: UserData): string => {
   const genres = [
     "uplifting pop",
     "heartfelt acoustic",
@@ -84,10 +93,8 @@ export default function KioskForm() {
     storyAboutCouple: "",
     roastOrShoutout: "",
   });
-  const [songs, setSongs] = useState<SongResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [expandedSong, setExpandedSong] = useState<SongResponse | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -102,7 +109,7 @@ export default function KioskForm() {
     setError("");
     try {
       const prompt = generatePrompt(formData);
-      const generatedSongs = await generateSong(prompt);
+      await generateSong(prompt);
       // Handle the generated songs as needed
     } catch (err) {
       console.error(err);
@@ -170,7 +177,7 @@ export default function KioskForm() {
           <div className="space-y-2">
             <Label htmlFor="storyAboutCouple">
               Share a funny or unforgettable story about the bride or groom that
-              perfectly captures who they are. Don't hold back—even the
+              perfectly captures who they are. Don&apos;t hold back—even the
               embarrassing moments are welcome!
             </Label>
             <Textarea
@@ -184,7 +191,7 @@ export default function KioskForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="roastOrShoutout">
-              Is there someone at the wedding you'd like to playfully roast or
+              Is there someone at the wedding you&apos;d like to playfully roast or
               give a special shout-out to? Share a humorous anecdote or
               something that makes them stand out.
             </Label>
