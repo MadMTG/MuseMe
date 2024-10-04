@@ -1,5 +1,5 @@
 // pages/api/openai.ts
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -30,40 +30,42 @@ const gpt_template = {
 };
 
 export async function GET() {
-  return new Response('GET Request not supported', {
+  return new Response("GET Request not supported", {
     status: 200,
-  })
+  });
 }
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
+export async function POST(request: Request) {
   try {
-    const { message } = req.body;
+    const { message } = await request.json();
+
+    if (!message) {
+      return NextResponse.json(
+        { error: "Message is required" },
+        { status: 400 }
+      );
+    }
+
     //Make a copy of the template
     const gpt_request = JSON.parse(JSON.stringify(gpt_template));
 
     //Update the user message
     gpt_request.messages.push({
       role: "user",
-      content: message,
+      content: [{ type: "text", text: message }],
     });
 
     const completion = await openai.chat.completions.create(gpt_request);
 
     const responseText =
-      completion.choices[0]?.message?.content || "No response from Lyric Generator";
-    
-    return new Response(JSON.stringify({ response: responseText }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+      completion.choices[0]?.message?.content ||
+      "No response from Lyric Generator";
+
+    return NextResponse.json({ response: responseText }, { status: 200 });
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Failed to communicate with Lyric Generator" }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return NextResponse.json(
+      { error: "Failed to communicate with Lyric Generator: " + error },
+      { status: 500 }
+    );
   }
 }
