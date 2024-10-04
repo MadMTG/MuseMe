@@ -29,31 +29,41 @@ const gpt_template = {
   },
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === "POST") {
-    try {
-      const { message } = req.body;
-      //Make a copy of the template
-      const gpt_request = JSON.parse(JSON.stringify(gpt_template));
+export async function GET() {
+  return new Response('GET Request not supported', {
+    status: 200,
+  })
+}
 
-      //Update the user message
-      gpt_request.messages.push({
-        role: "user",
-        content: message,
-      });
+export async function POST(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { message } = req.body;
+    //Make a copy of the template
+    const gpt_request = JSON.parse(JSON.stringify(gpt_template));
 
-      const completion = await openai.chat.completions.create(gpt_request);
+    //Update the user message
+    gpt_request.messages.push({
+      role: "user",
+      content: message,
+    });
 
-      const responseText =
-        completion.choices[0]?.message?.content || "No response from OpenAI";
-      res.status(200).json({ response: responseText });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to communicate with OpenAI" });
-    }
-  } else {
-    res.status(405).json({ error: "Method Not Allowed" });
+    const completion = await openai.chat.completions.create(gpt_request);
+
+    const responseText =
+      completion.choices[0]?.message?.content || "No response from Lyric Generator";
+    
+    return new Response(JSON.stringify({ response: responseText }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: "Failed to communicate with Lyric Generator" }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
