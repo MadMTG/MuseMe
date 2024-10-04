@@ -14,6 +14,11 @@ import {
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
+interface LyricResponse {
+  response: string;
+}
+
+
 interface SongResponse {
   id: string;
   title: string;
@@ -42,14 +47,35 @@ interface UserData {
 }
 
 const generatePrompt = (userData: UserData): string => {
-  return `Compose a ${userData.style} song in a ${userData.mood} mood that incorporates the following:
+  return `
+  Name: ${userData.name}
+  Nickname: ${userData.nickname}
+  Style: ${userData.style}
+  Mood: ${userData.mood}
+  Brief Description: ${userData.briefDescription}
+  Key Words: ${userData.keyWords}
+  Relationship: ${userData.relationshipToPerson}
+  Special Event: ${userData.specialEventOrMemory}
+  `;
+};
 
-- A brief description of the person: "${userData.briefDescription}"
-- Key words or phrases to include: "${userData.keyWords}"
-- The song is being requested by ${userData.name}, who is the ${userData.relationshipToPerson} of the person.
-- Special event or memory to highlight: "${userData.specialEventOrMemory}"
-
-The song should be heartfelt, humorous, and appropriate for all guests.`;
+const generateLyrics = async (prompt: string): Promise<LyricResponse> => {
+  const response = await fetch(
+    "/api/gpt",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: prompt,
+      }),
+    }
+  );
+  if (!response.ok) {
+    throw new Error("Failed to generate song");
+  }
+  return response.json();
 };
 
 const generateSong = async (prompt: string): Promise<SongResponse[]> => {
@@ -102,7 +128,8 @@ export default function KioskForm() {
     setError("");
     try {
       const prompt = generatePrompt(formData);
-      await generateSong(prompt);
+      const response = await generateLyrics(prompt);
+      console.log(response.response);
       // Handle the generated songs as needed
     } catch (err) {
       console.error(err);
@@ -222,10 +249,10 @@ export default function KioskForm() {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating Song...
+                Generating Lyrics...
               </>
             ) : (
-              "Generate Song"
+              "Generate Lyrics"
             )}
           </Button>
           {error && <p className="text-red-500 mt-2">{error}</p>}
