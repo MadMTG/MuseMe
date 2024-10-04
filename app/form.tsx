@@ -75,10 +75,24 @@ const generateLyrics = async (prompt: string): Promise<LyricResponse> => {
 };
 
 const displayLyrics = (lyrics: string): JSX.Element => {
+  // Remove ``` from the start and end of the lyrics
+  lyrics = lyrics.replace(/```/g, '');
+  const sections = lyrics.trim().split('\n\n');
+
   return (
-    <pre>
-      {lyrics}
-    </pre>
+    <>
+      {sections.map((section, index) => {
+          const [title, ...lines] = section.split('\n');
+          return (
+            <div key={index} className="mb-6">
+              <h2 className="text-2xl font-bold mb-2 text-primary">{title.replace(/[\[\]]/g, '')}</h2>
+              {lines.map((line, lineIndex) => (
+                <p key={lineIndex} className="text-foreground">{line}</p>
+              ))}
+            </div>
+          );
+        })}
+    </>
   );
 }
 
