@@ -123,13 +123,14 @@ export default function KioskForm() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Person&apos;s Name</Label>
+            <Label htmlFor="name">Person's Name</Label>
             <Input
               id="name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
               required
+              placeholder="Enter the person's name"
             />
           </div>
           <div className="space-y-2">
@@ -139,6 +140,7 @@ export default function KioskForm() {
               name="nickname"
               value={formData.nickname}
               onChange={handleInputChange}
+              placeholder="Enter a nickname (optional)"
             />
           </div>
           <div className="space-y-2">
@@ -149,6 +151,7 @@ export default function KioskForm() {
               value={formData.style}
               onChange={handleInputChange}
               required
+              placeholder="Enter the style of the song (e.g., pop, rock)"
             />
           </div>
           <div className="space-y-2">
@@ -159,10 +162,13 @@ export default function KioskForm() {
               value={formData.mood}
               onChange={handleInputChange}
               required
+              placeholder="Enter the mood of the song (e.g., happy, sentimental)"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="briefDescription">Brief Description of Person</Label>
+            <Label htmlFor="briefDescription">
+              Brief Description of Person
+            </Label>
             <Textarea
               id="briefDescription"
               name="briefDescription"
@@ -170,6 +176,7 @@ export default function KioskForm() {
               onChange={handleInputChange}
               required
               rows={3}
+              placeholder="Provide a brief description of the person"
             />
           </div>
           <div className="space-y-2">
@@ -181,20 +188,26 @@ export default function KioskForm() {
               onChange={handleInputChange}
               required
               rows={3}
+              placeholder="Enter key words or phrases to include in the song"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="relationshipToPerson">Your Relationship to the Person</Label>
+            <Label htmlFor="relationshipToPerson">
+              Your Relationship to the Person
+            </Label>
             <Input
               id="relationshipToPerson"
               name="relationshipToPerson"
               value={formData.relationshipToPerson}
               onChange={handleInputChange}
               required
+              placeholder="Enter your relationship to the person (e.g., friend, sibling)"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="specialEventOrMemory">Special Event or Memory</Label>
+            <Label htmlFor="specialEventOrMemory">
+              Special Event or Memory
+            </Label>
             <Textarea
               id="specialEventOrMemory"
               name="specialEventOrMemory"
@@ -202,6 +215,7 @@ export default function KioskForm() {
               onChange={handleInputChange}
               required
               rows={4}
+              placeholder="Describe a special event or memory to highlight in the song"
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
