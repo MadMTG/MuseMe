@@ -123,7 +123,7 @@ export default function KioskForm() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Person's Name</Label>
+            <Label htmlFor="name">Person&apos;s Name</Label>
             <Input
               id="name"
               name="name"
