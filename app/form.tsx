@@ -32,33 +32,24 @@ interface SongResponse {
 
 interface UserData {
   name: string;
-  relationshipToCouple: string;
-  userDescription: string;
-  coupleDescription: string;
-  storyAboutCouple: string;
-  roastOrShoutout: string;
+  nickname: string;
+  style: string;
+  mood: string;
+  briefDescription: string;
+  keyWords: string;
+  relationshipToPerson: string;
+  specialEventOrMemory: string;
 }
 
 const generatePrompt = (userData: UserData): string => {
-  const genres = [
-    "uplifting pop",
-    "heartfelt acoustic",
-    "light-hearted folk",
-    "cheerful country",
-    "feel-good rock",
-    "sentimental ballad",
-  ];
-  const randomGenre = genres[Math.floor(Math.random() * genres.length)];
+  return `Compose a ${userData.style} song in a ${userData.mood} mood that incorporates the following:
 
-  return `Compose a ${randomGenre} song that incorporates the following:
+- A brief description of the person: "${userData.briefDescription}"
+- Key words or phrases to include: "${userData.keyWords}"
+- The song is being requested by ${userData.name}, who is the ${userData.relationshipToPerson} of the person.
+- Special event or memory to highlight: "${userData.specialEventOrMemory}"
 
-- A description of the requester: "${userData.userDescription}"
-- A description of the couple: "${userData.coupleDescription}"
-- A funny or unforgettable story about the bride or groom: "${userData.storyAboutCouple}"
-- A playful roast or special shout-out to someone at the wedding: "${userData.roastOrShoutout}"
-- The song is being requested by ${userData.name}, who is the ${userData.relationshipToCouple} of the couple.
-
-The song should be humorous and heartfelt, celebrating the occasion and the unique personalities involved. Make sure it's appropriate for all guests at the wedding.`;
+The song should be heartfelt, humorous, and appropriate for all guests.`;
 };
 
 const generateSong = async (prompt: string): Promise<SongResponse[]> => {
@@ -87,11 +78,13 @@ const generateSong = async (prompt: string): Promise<SongResponse[]> => {
 export default function KioskForm() {
   const [formData, setFormData] = useState({
     name: "",
-    relationshipToCouple: "",
-    userDescription: "",
-    coupleDescription: "",
-    storyAboutCouple: "",
-    roastOrShoutout: "",
+    nickname: "",
+    style: "",
+    mood: "",
+    briefDescription: "",
+    keyWords: "",
+    relationshipToPerson: "",
+    specialEventOrMemory: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -122,16 +115,15 @@ export default function KioskForm() {
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>Wedding Song Generator</CardTitle>
+        <CardTitle>Personalized Song Generator</CardTitle>
         <CardDescription>
-          Share your stories to generate a personalized and humorous song for the
-          wedding!
+          Share details to generate a personalized and memorable song!
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Your Name</Label>
+            <Label htmlFor="name">Person&apos;s Name</Label>
             <Input
               id="name"
               name="name"
@@ -141,64 +133,72 @@ export default function KioskForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="relationshipToCouple">
-              Your Relationship to the Couple
-            </Label>
+            <Label htmlFor="nickname">Nickname</Label>
             <Input
-              id="relationshipToCouple"
-              name="relationshipToCouple"
-              value={formData.relationshipToCouple}
+              id="nickname"
+              name="nickname"
+              value={formData.nickname}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="style">Style</Label>
+            <Input
+              id="style"
+              name="style"
+              value={formData.style}
               onChange={handleInputChange}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="userDescription">Describe Yourself</Label>
+            <Label htmlFor="mood">Mood</Label>
+            <Input
+              id="mood"
+              name="mood"
+              value={formData.mood}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="briefDescription">Brief Description of Person</Label>
             <Textarea
-              id="userDescription"
-              name="userDescription"
-              value={formData.userDescription}
+              id="briefDescription"
+              name="briefDescription"
+              value={formData.briefDescription}
               onChange={handleInputChange}
               required
               rows={3}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="coupleDescription">Describe the Couple</Label>
+            <Label htmlFor="keyWords">Key Words or Phrases to Include</Label>
             <Textarea
-              id="coupleDescription"
-              name="coupleDescription"
-              value={formData.coupleDescription}
+              id="keyWords"
+              name="keyWords"
+              value={formData.keyWords}
               onChange={handleInputChange}
               required
               rows={3}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="storyAboutCouple">
-              Share a funny or unforgettable story about the bride or groom that
-              perfectly captures who they are. Don&apos;t hold back—even the
-              embarrassing moments are welcome!
-            </Label>
-            <Textarea
-              id="storyAboutCouple"
-              name="storyAboutCouple"
-              value={formData.storyAboutCouple}
+            <Label htmlFor="relationshipToPerson">Your Relationship to the Person</Label>
+            <Input
+              id="relationshipToPerson"
+              name="relationshipToPerson"
+              value={formData.relationshipToPerson}
               onChange={handleInputChange}
               required
-              rows={4}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="roastOrShoutout">
-              Is there someone at the wedding you&apos;d like to playfully roast or
-              give a special shout-out to? Share a humorous anecdote or
-              something that makes them stand out.
-            </Label>
+            <Label htmlFor="specialEventOrMemory">Special Event or Memory</Label>
             <Textarea
-              id="roastOrShoutout"
-              name="roastOrShoutout"
-              value={formData.roastOrShoutout}
+              id="specialEventOrMemory"
+              name="specialEventOrMemory"
+              value={formData.specialEventOrMemory}
               onChange={handleInputChange}
               required
               rows={4}
