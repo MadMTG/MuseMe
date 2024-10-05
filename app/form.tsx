@@ -76,38 +76,46 @@ const generateLyrics = async (prompt: string): Promise<LyricResponse> => {
 
 const displayLyrics = (lyrics: string): JSX.Element => {
   // Remove ``` from the start and end of the lyrics
-  lyrics = lyrics.replace(/```/g, '');
-  const sections = lyrics.trim().split('\n\n');
+  lyrics = lyrics.replace(/```/g, "");
+  const sections = lyrics.trim().split("\n\n");
 
   return (
     <>
       {sections.map((section, index) => {
-          const [title, ...lines] = section.split('\n');
-          return (
-            <div key={index} className="mb-6">
-              <h2 className="text-2xl font-bold mb-2 text-primary">{title.replace(/[\[\]]/g, '')}</h2>
-              {lines.map((line, lineIndex) => (
-                <p key={lineIndex} className="text-foreground">{line}</p>
-              ))}
-            </div>
-          );
-        })}
+        const [title, ...lines] = section.split("\n");
+        return (
+          <div key={index} className="mb-6">
+            <h2 className="text-2xl font-bold mb-2 text-primary">
+              {title.replace(/[\[\]]/g, "")}
+            </h2>
+            {lines.map((line, lineIndex) => (
+              <p key={lineIndex} className="text-foreground">
+                {line}
+              </p>
+            ))}
+          </div>
+        );
+      })}
     </>
   );
-}
+};
 
-const generateSong = async (prompt: string): Promise<SongResponse[]> => {
+const generateSong = async (
+  lyrics: string,
+  style: string,
+  mood: string
+): Promise<SongResponse[]> => {
   const response = await fetch(
-    "https://suno-api-sigma-five.vercel.app/api/generate",
+    "https://suno-api-sigma-five.vercel.app/api/custom_generate",
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        prompt: prompt,
+        prompt: lyrics,
+        tags: style + ", " + mood,
         make_instrumental: false,
-        model: "chirp-v3-5",
         wait_audio: false,
       }),
     }
@@ -132,7 +140,7 @@ export default function KioskForm() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [lyrics, setLyrics] = useState<string | null>(null);
+  const [lyrics, setLyrics] = useState<string>("");
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -141,7 +149,7 @@ export default function KioskForm() {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLyricSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -149,6 +157,22 @@ export default function KioskForm() {
       const prompt = generatePrompt(formData);
       const response = await generateLyrics(prompt);
       setLyrics(response.lyrics);
+      // Handle the generated songs as needed
+    } catch (err) {
+      console.error(err);
+      setError("Failed to generate song. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSongSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await generateSong(lyrics, formData.style, formData.mood);
+      console.log(response);
       // Handle the generated songs as needed
     } catch (err) {
       console.error(err);
@@ -168,7 +192,7 @@ export default function KioskForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleLyricSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Person&apos;s Name</Label>
               <Input
@@ -291,6 +315,18 @@ export default function KioskForm() {
           </CardHeader>
           <CardContent>
             {displayLyrics(lyrics)}
+            <form onSubmit={handleSongSubmit} className="space-y-6">
+              <Button className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Song...
+                  </>
+                ) : (
+                  "Generate Song"
+                )}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       )}
