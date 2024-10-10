@@ -1,8 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: {
-        domains: ['cdn2.suno.ai'],
-    },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn2.suno.ai",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

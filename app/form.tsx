@@ -186,9 +186,9 @@ export default function KioskForm() {
     <>
       <Card className="w-full max-w-3xl mx-auto">
         <CardHeader>
-          <CardTitle>Personalized Song Generator</CardTitle>
+          <CardTitle>MuseMe: The Birth Place of Dom the Dominator&apos;s Anthem</CardTitle>
           <CardDescription>
-            Share details to generate a personalized and memorable song!
+            Speak of glory or speak of shame, we&apos;ll craft a song and give them fame!
           </CardDescription>
         </CardHeader>
         <CardContent>
